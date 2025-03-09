@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电缆线价格计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 95%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"], select, input[type="number"] {
+            width: calc(100% - 30px);
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .material-list {
+            margin-top: 20px;
+        }
+        .material-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .total-price {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>电缆线价格计算器</h2>
+        
+        <label for="cableType">选择电缆型号:</label>
+        <select id="cableType" onchange="updateMaterials()">
+            <option value="">请选择</option>
+            <option value="YJV">YJV</option>
+            <option value="YJV22">YJV22</option>
+            <option value="YJLV">YJLV</option>
+            <option value="YJLV22">YJLV22</option>
+            <option value="NH-YJV">NH-YJV</option>
+            <option value="WDZ-YJY">WDZ-YJY</option>
+            <option value="WDZN-YJY">WDZN-YJY</option>
+            <option value="YJLHV">YJLHV</option>
+            <option value="YJLHV22">YJLHV22</option>
+            <option value="YJV62">YJV62</option>
+            <option value="YJLV62">YJLV62</option>
+            <option value="YJLHV62">YJLHV62</option>
+            <option value="VLV">VLV</option>
+            <option value="VLV22">VLV22</option>
+        </select>
+
+        <div class="material-list" id="materialList"></div>
+
+        <button onclick="calculateTotalPrice()">计算总价</button>
+
+        <div class="total-price" id="totalPrice"></div>
+
+        <button onclick="resetForm()">返回</button>
+    </div>
+
+    <script>
+        const materials = [
+            "铜",
+            "耐火云母带",
+            "铝",
+            "铝合金",
+            "PVC绝缘",
+            "XLPE绝缘",
+            "XLPE耐火绝缘",
+            "PP填充绳",
+            "无纺布",
+            "PPD带内衬",
+            "玻纤填充",
+            "玻纤包带",
+            "镀锌钢带",
+            "无磁钢带",
+            "铜无铠PVC护套",
+            "铜有铠PVC护套",
+            "铝无铠PVC护套",
+            "铝有铠PVC护套",
+            "WDZ护套"
+        ];
+
+        function updateMaterials() {
+            const materialListDiv = document.getElementById('materialList');
+            materialListDiv.innerHTML = ''; // Clear previous materials
+
+            if (document.getElementById('cableType').value) {
+                const savedPrices = JSON.parse(localStorage.getItem('materialPrices')) || {};
+
+                materials.forEach(material => {
+                    const materialItem = document.createElement('div');
+                    materialItem.className = 'material-item';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = true; // Default checked
+
+                    const label = document.createElement('label');
+                    label.textContent = material;
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.step = 'any';
+                    input.placeholder = '请输入价格';
+                    input.value = savedPrices[material] || '';
+
+                    materialItem.appendChild(checkbox);
+                    materialItem.appendChild(label);
+                    materialItem.appendChild(input);
+                    materialListDiv.appendChild(materialItem);
+                });
+            } else {
+                // Do not clear stored prices when no cable type is selected
+            }
+        }
+
+        function calculateTotalPrice() {
+            let totalPrice = 0;
+            const items = document.querySelectorAll('#materialList .material-item');
+
+            const materialPrices = {};
+            items.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const input = item.querySelector('input[type="number"]');
+                const materialName = input.previousElementSibling.textContent.trim();
+                const price = parseFloat(input.value);
+
+                materialPrices[materialName] = price;
+
+                if (checkbox.checked && !isNaN(price)) {
+                    totalPrice += price;
+                }
+            });
+
+            localStorage.setItem('materialPrices', JSON.stringify(materialPrices));
+            document.getElementById('totalPrice').textContent = `总价: ${totalPrice.toFixed(2)}元`;
+        }
+
+        function resetForm() {
+            document.getElementById('cableType').value = '';
+            document.getElementById('materialList').innerHTML = '';
+            document.getElementById('totalPrice').textContent = '';
+            // Do not clear stored prices
+        }
+    </script>
+</body>
+</html>
